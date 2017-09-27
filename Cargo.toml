@@ -1,0 +1,6 @@
+[package]
+name = "rust-fid"
+version = "0.1.0"
+authors = ["MIKI Takushi <takushi-m@users.noreply.github.com>"]
+
+[dependencies]
