@@ -1,12 +1,36 @@
+extern crate rand;
+
 use std::cmp::min;
 use std::vec::Vec;
+use rand::Rng;
 
 fn main() {
-    let bv = [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0];
+    let mut rng = rand::thread_rng();
+    let mut bv = [0; 65536];
+    for i in 0..65536 {
+        bv[i] = (rng.gen::<usize>()%2) as u8;
+    }
     let fid = Fid::new(&bv);
-    println!("{:?}", fid.big_blocks);
-    println!("{:?}", fid.small_blocks);
-    println!("{:?}", fid.rank(10));
+
+    let s = std::time::Instant::now();
+    for i in 0..10000 {
+        fid.rank(rng.gen::<usize>()%65536);
+    }
+    let e = s.elapsed();
+    let elapsed = e.as_secs()*1_000_000_000 + e.subsec_nanos() as u64;
+    println!("FID:");
+    println!("{:?}ms", elapsed/1_000_000);
+    println!("{:?}us/query", elapsed/10000/1000);
+
+    let s = std::time::Instant::now();
+    for i in 0..10000 {
+        rank_mock(&bv, rng.gen::<usize>()%65536);
+    }
+    let e = s.elapsed();
+    let elapsed = e.as_secs()*1_000_000_000 + e.subsec_nanos() as u64;
+    println!("normal:");
+    println!("{:?}ms", elapsed/1_000_000);
+    println!("{:?}us/query", elapsed/10000/1000);
 }
 
 struct Fid<'a> {
