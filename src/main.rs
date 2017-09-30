@@ -96,6 +96,25 @@ impl<'a> Fid<'a> {
         }
         rank
     }
+
+    fn select(&self, n: usize) -> usize {
+        let mut l = 0;
+        let mut u = self.raw.len();
+
+        while u-l>1 {
+            let m = (((l+u) as f32)/2.0).floor() as usize;
+            if n < self.rank(m) {
+                u = m;
+            } else {
+                l = m;
+            }
+        }
+        if n==self.rank(l) {
+            l
+        } else {
+            self.raw.len()
+        }
+    }
 }
 
 fn rank_mock(bv: &[u8], idx: usize) -> usize {
@@ -121,7 +140,7 @@ fn select_mock(bv: &[u8], idx: usize) -> usize {
             return i;
         }
     }
-    return 0;
+    return bv.len()
 }
 
 
@@ -153,7 +172,19 @@ fn rank_test() {
 #[test]
 fn select_test() {
     let bv = [0,1,0,1];
+    let fid = Fid::new(&bv);
     assert_eq!(select_mock(&bv, 0), 1);
     assert_eq!(select_mock(&bv, 1), 3);
-    assert_eq!(select_mock(&bv, 2), 0);
+    assert_eq!(select_mock(&bv, 2), 4);
+
+    assert_eq!(select_mock(&bv, 0), fid.select(0));
+    assert_eq!(select_mock(&bv, 1), fid.select(1));
+    assert_eq!(select_mock(&bv, 2), fid.select(2));
+
+    let mut bv = [0; 64];
+    bv[30] = 1;
+    bv[50] = 1;
+    let fid = Fid::new(&bv);
+    assert_eq!(select_mock(&bv, 0), fid.select(0));
+    assert_eq!(select_mock(&bv, 1), fid.select(1));
 }
