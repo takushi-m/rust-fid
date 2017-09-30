@@ -57,7 +57,7 @@ impl<'a> Fid<'a> {
     fn build(&mut self) {
         let n = self.raw.len();
         let big_block_size = (n as f64).log2().powi(2).floor() as usize; // (lg(n))^2
-        let small_block_size = ((n as f64)/2.0).floor() as usize; // lg(n)/2
+        let small_block_size = ((n as f64).log2()/2.0).floor() as usize; // lg(n)/2
         self.big_block_size = big_block_size;
         self.small_block_size = small_block_size;
 
@@ -86,7 +86,7 @@ impl<'a> Fid<'a> {
         rank += self.big_blocks[pos];
 
         let sp = p % self.small_block_size;
-        let spos = pos/self.small_block_size + (p-sp)/self.small_block_size;
+        let spos = pos*self.big_block_size/self.small_block_size + (p-sp)/self.small_block_size;
         rank += self.small_blocks[spos];
 
         for i in (pos*self.big_block_size+spos*self.small_block_size)..min(idx,self.raw.len()) {
@@ -143,6 +143,11 @@ fn rank_test() {
     assert_eq!(rank_mock(&bv, 3), fid.rank(3));
     assert_eq!(rank_mock(&bv, 4), fid.rank(4));
     assert_eq!(rank_mock(&bv, 5), fid.rank(5));
+
+    let mut bv = [0; 64];
+    bv[50] = 1;
+    let fid = Fid::new(&bv);
+    assert_eq!(rank_mock(&bv, 64), fid.rank(64));
 }
 
 #[test]
