@@ -89,8 +89,8 @@ impl<'a> Fid<'a> {
         let spos = pos*self.big_block_size/self.small_block_size + (p-sp)/self.small_block_size;
         rank += self.small_blocks[spos];
 
-        for i in (pos*self.big_block_size+spos*self.small_block_size)..min(idx,self.raw.len()) {
-            if self.raw[i]== 1 {
+        for i in (spos*self.small_block_size)..min(idx,self.raw.len()) {
+            if self.raw[i] == 1 {
                 rank += 1;
             }
         }
@@ -109,7 +109,7 @@ impl<'a> Fid<'a> {
                 l = m;
             }
         }
-        if n==self.rank(l) {
+        if n==self.rank(l)&&self.raw[l]==1 {
             l
         } else {
             self.raw.len()
@@ -162,11 +162,20 @@ fn rank_test() {
     assert_eq!(rank_mock(&bv, 3), fid.rank(3));
     assert_eq!(rank_mock(&bv, 4), fid.rank(4));
     assert_eq!(rank_mock(&bv, 5), fid.rank(5));
+}
 
-    let mut bv = [0; 64];
-    bv[50] = 1;
+#[test]
+fn rank_test2() {
+    let mut rng = rand::thread_rng();
+    let mut bv = [0;64];
+    for i in 0..64 {
+        bv[i] = (rng.gen::<usize>()%2) as u8;
+    }
+
     let fid = Fid::new(&bv);
-    assert_eq!(rank_mock(&bv, 64), fid.rank(64));
+    for i in 0..64 {
+        assert_eq!(rank_mock(&bv, i), fid.rank(i));
+    }
 }
 
 #[test]
@@ -180,11 +189,19 @@ fn select_test() {
     assert_eq!(select_mock(&bv, 0), fid.select(0));
     assert_eq!(select_mock(&bv, 1), fid.select(1));
     assert_eq!(select_mock(&bv, 2), fid.select(2));
+}
 
-    let mut bv = [0; 64];
-    bv[30] = 1;
-    bv[50] = 1;
+#[test]
+fn select_test2() {
+    let mut rng = rand::thread_rng();
+    let mut bv = [0;64];
+    for i in 0..64 {
+        bv[i] = (rng.gen::<usize>()%2) as u8;
+    }
+
     let fid = Fid::new(&bv);
-    assert_eq!(select_mock(&bv, 0), fid.select(0));
-    assert_eq!(select_mock(&bv, 1), fid.select(1));
+    for i in 0..64 {
+        println!("{:?}", i);
+        assert_eq!(select_mock(&bv, i), fid.select(i));
+    }
 }
